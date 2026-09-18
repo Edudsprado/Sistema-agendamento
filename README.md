@@ -2,7 +2,7 @@
 
 Sistema de autoagendamento online para clínicas e empresas de serviços. O cliente agenda diretamente pelo site — confirmação automática, sem aprovação manual.
 
-<img width="1363" height="1600" alt="image" src="https://github.com/user-attachments/assets/47fe9a17-18f5-4a35-b134-c647bdc5ea28" />
+<img width="1472" height="1480" alt="image" src="https://github.com/user-attachments/assets/564cec39-137f-41b7-884c-ebee62bfb2d4" />
 
 
 ## Contexto
