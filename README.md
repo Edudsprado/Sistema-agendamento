@@ -1,8 +1,29 @@
 # 📅 AgendaPro
 
-Sistema completo de agendamento, desenvolvido com **Python + FastAPI + PostgreSQL + React + TypeScript**, executado facilmente com **Docker Compose**.
+Sistema de agendamento desenvolvido com **Python + FastAPI + PostgreSQL + React + TypeScript**, executado com **Docker Compose**.
 
-O projeto foi organizado para que uma nova instalação possa ser feita com poucos comandos.
+O projeto possui autenticação com JWT, cadastro de usuários, clientes, serviços, profissionais, horários de funcionamento, bloqueios, agendamentos, dashboard e relatórios.
+
+![Runtime Verification](https://github.com/Edudsprado/Sistema-agendamento/actions/workflows/runtime-verification.yml/badge.svg)
+
+---
+
+## ✅ Estado atual do projeto
+
+O sistema foi atualizado com melhorias de segurança e validação:
+
+- `SECRET_KEY` obrigatória, sem fallback inseguro.
+- Senha de login limitada a 128 caracteres.
+- JWT com `jti` para identificação do token.
+- Logout com revogação de token.
+- Rate limiting básico para tentativas de login.
+- E-mail normalizado no cadastro e no login.
+- Docker Compose exigindo variáveis sensíveis via `.env`.
+- Backend e frontend executando com usuário não-root nos containers.
+- Frontend servido pelo Nginx na porta interna `8080`.
+- Workflow de verificação no GitHub Actions com testes automatizados e smoke tests com Docker Compose.
+
+> Observação: a revogação de token e o rate limiting atuais usam memória do processo. Para produção com múltiplas réplicas, o recomendado é migrar esses controles para Redis ou outro armazenamento compartilhado.
 
 ---
 
@@ -12,34 +33,21 @@ O projeto foi organizado para que uma nova instalação possa ser feita com pouc
 
 Antes de começar, instale:
 
-* [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-* Git
+- Docker Desktop
+- Git
 
-No Windows, deixe o **Docker Desktop aberto e em execução**.
+No Windows, deixe o **Docker Desktop aberto e em execução** antes de subir o projeto.
 
 ---
 
-# 1. Baixar o projeto
-
-Abra o PowerShell ou Git Bash e execute:
+## 1. Baixar o projeto
 
 ```bash
 git clone https://github.com/Edudsprado/Sistema-agendamento.git
-```
-
-Entre na pasta:
-
-```bash
 cd Sistema-agendamento
 ```
 
-Confira se os arquivos estão presentes:
-
-```bash
-dir
-```
-
-Você deverá encontrar:
+Confira a estrutura:
 
 ```text
 backend
@@ -51,11 +59,9 @@ README.md
 
 ---
 
-# 2. Configuração do ambiente
+## 2. Configurar o ambiente
 
-Para uso local com Docker, o projeto já possui configurações padrão.
-
-Opcionalmente, crie o arquivo `.env` a partir do modelo:
+O projeto agora exige variáveis de ambiente sensíveis. Crie o arquivo `.env` a partir do exemplo.
 
 ### PowerShell
 
@@ -63,34 +69,42 @@ Opcionalmente, crie o arquivo `.env` a partir do modelo:
 Copy-Item .env.example .env
 ```
 
-Depois, abra:
+### Linux, macOS ou Git Bash
 
-```powershell
-notepad .env
+```bash
+cp .env.example .env
 ```
 
-Exemplo:
+Depois edite o arquivo `.env`.
+
+### Exemplo de `.env` local
 
 ```env
-SECRET_KEY=troque-por-uma-chave-secreta
+POSTGRES_DB=agendapro
+POSTGRES_USER=agendapro
+POSTGRES_PASSWORD=troque-esta-senha-local
+DATABASE_URL=postgresql+psycopg://agendapro:troque-esta-senha-local@db:5432/agendapro
+SECRET_KEY=gere-uma-chave-forte-e-unica
 ACCESS_TOKEN_EXPIRE_MINUTES=480
+CORS_ORIGINS=http://localhost:3000,http://localhost:5173
+VITE_API_URL=http://localhost:8000
 ```
 
-> ⚠️ O arquivo `.env` não deve ser enviado para o GitHub.
+Gere uma `SECRET_KEY` forte com:
 
-Para uso local, o Docker Compose já configura automaticamente a comunicação entre PostgreSQL, backend e frontend.
+```bash
+openssl rand -hex 32
+```
+
+No Windows, caso não tenha `openssl`, use uma senha longa, aleatória e exclusiva para desenvolvimento local.
+
+> ⚠️ Nunca envie o arquivo `.env` para o GitHub.
 
 ---
 
-# 3. Iniciar o sistema
+## 3. Iniciar o sistema
 
-Na pasta:
-
-```text
-Sistema-agendamento
-```
-
-execute:
+Na pasta raiz do projeto, execute:
 
 ```bash
 docker compose up --build
@@ -98,65 +112,63 @@ docker compose up --build
 
 O Docker irá:
 
-1. Criar o PostgreSQL
-2. Criar o backend Python/FastAPI
-3. Criar o frontend React
-4. Executar as migrations do banco
-5. Iniciar os serviços
+1. Criar o PostgreSQL.
+2. Criar o backend FastAPI.
+3. Criar o frontend React/Nginx.
+4. Executar as migrations do banco.
+5. Iniciar os serviços.
 
-Na primeira execução pode demorar um pouco porque as imagens e dependências serão construídas.
+Na primeira execução, o processo pode demorar porque as imagens e dependências serão construídas.
 
 ---
 
-# 4. Acessar o sistema
+## 4. Acessar o sistema
 
-Depois que os containers estiverem iniciados:
+Depois que os containers estiverem em execução:
 
-### 🖥️ Sistema
+### Sistema
 
 ```text
 http://localhost:3000
 ```
 
-### 🔧 API
+### API
 
 ```text
 http://localhost:8000
 ```
 
-### 📚 Documentação da API
+### Documentação da API
 
 ```text
 http://localhost:8000/docs
 ```
 
-A documentação `/docs` permite testar os endpoints da API diretamente pelo navegador.
-
----
-
-# 5. Primeiro acesso
-
-Na tela inicial, clique em:
+### Healthcheck
 
 ```text
-Cadastre-se
+http://localhost:8000/api/health
 ```
-
-Crie seu usuário com:
-
-* Nome
-* E-mail válido
-* Senha com pelo menos 8 caracteres
-
-Depois faça login.
-
-> Use um e-mail real ou um domínio aceito pelo validador. Evite endereços como `usuario@agendapro.local`.
 
 ---
 
-# 6. Ordem recomendada para configurar o sistema
+## 5. Primeiro acesso
 
-Depois de entrar, configure nesta ordem:
+Na tela inicial, clique em **Cadastre-se**.
+
+Crie um usuário com:
+
+- Nome.
+- E-mail válido.
+- Senha com pelo menos 8 caracteres.
+
+Depois faça login normalmente.
+
+---
+
+## 6. Ordem recomendada de uso
+
+Depois de entrar, configure o sistema nesta ordem:
 
 ```text
 1. Clientes
@@ -167,9 +179,7 @@ Depois de entrar, configure nesta ordem:
 6. Agendamentos
 ```
 
-### Exemplo
-
-Crie um serviço:
+Exemplo de serviço:
 
 ```text
 Nome: Corte
@@ -177,23 +187,22 @@ Duração: 30 minutos
 Preço: R$ 45,00
 ```
 
-Depois crie um profissional e associe o serviço.
-
-Configure o horário de funcionamento e então faça o primeiro agendamento.
+Depois crie um profissional, associe o serviço, configure os horários e realize o primeiro agendamento.
 
 ---
 
-# 7. Regra de conflito de horários
+## 7. Regras de conflito de horários
 
-O backend verifica automaticamente:
+O backend valida automaticamente:
 
-* profissional ativo;
-* serviço ativo;
-* associação entre profissional e serviço;
-* horário de funcionamento;
-* bloqueios;
-* duração do serviço;
-* conflitos com outros agendamentos.
+- Cliente ativo.
+- Profissional ativo.
+- Serviço ativo.
+- Associação entre profissional e serviço.
+- Horário de funcionamento.
+- Bloqueios de horário.
+- Duração do serviço.
+- Conflitos com outros agendamentos.
 
 Exemplo:
 
@@ -210,220 +219,167 @@ Um segundo agendamento para o mesmo profissional:
 
 será recusado.
 
-A validação acontece no **backend Python**, e não somente no frontend.
+A validação acontece no **backend**, não apenas no frontend.
 
 ---
 
-# 8. Parar o sistema
+## 8. Autenticação e segurança
 
-Para parar os containers:
+O projeto utiliza:
+
+- JWT assinado com `SECRET_KEY`.
+- Campo `jti` no token.
+- Revogação de token no logout.
+- Hash de senha com Argon2 via `pwdlib`.
+- Validação de dados com Pydantic.
+- Rotas protegidas por Bearer Token.
+- Rate limiting básico no endpoint de login.
+- CORS configurável por variável de ambiente.
+
+Endpoints de autenticação:
+
+```text
+POST /api/auth/register
+POST /api/auth/login
+GET  /api/auth/me
+POST /api/auth/logout
+```
+
+Comportamentos esperados:
+
+- Login válido retorna `access_token`.
+- Senha incorreta retorna erro genérico.
+- Token inválido retorna `401`.
+- Token revogado após logout não pode ser reutilizado.
+- Muitas tentativas de login retornam `429`.
+- Senha acima de 128 caracteres no login retorna erro de validação.
+
+---
+
+## 9. Parar o sistema
+
+Para parar os containers sem apagar os dados:
 
 ```bash
 docker compose down
 ```
 
-Isso **não apaga os dados do banco**.
-
----
-
-# 9. Iniciar novamente
-
-Depois que o projeto já tiver sido construído, normalmente basta:
-
-```bash
-docker compose up
-```
-
----
-
-# 10. Reconstruir o projeto
-
-Sempre que houver alteração no código e você quiser garantir que as imagens sejam reconstruídas:
-
-```bash
-docker compose up --build
-```
-
----
-
-# 11. Atualizar o projeto pelo GitHub
-
-Caso exista uma versão nova no GitHub:
-
-```bash
-git pull
-```
-
-Depois:
-
-```bash
-docker compose up --build
-```
-
-Assim você baixa as alterações e reconstrói os containers.
-
----
-
-# 12. Verificar os containers
-
-Para verificar se todos os serviços estão funcionando:
-
-```bash
-docker compose ps
-```
-
-O projeto possui os seguintes serviços:
-
-```text
-db
-backend
-frontend
-```
-
----
-
-# 13. Ver logs
-
-Para visualizar os logs:
-
-```bash
-docker compose logs -f
-```
-
-Para visualizar somente o backend:
-
-```bash
-docker compose logs -f backend
-```
-
-Para visualizar somente o frontend:
-
-```bash
-docker compose logs -f frontend
-```
-
-Para visualizar somente o banco:
-
-```bash
-docker compose logs -f db
-```
-
-Para sair dos logs:
-
-```text
-Ctrl + C
-```
-
----
-
-# 14. Reiniciar apenas um serviço
-
-Backend:
-
-```bash
-docker compose restart backend
-```
-
-Frontend:
-
-```bash
-docker compose restart frontend
-```
-
-Banco:
-
-```bash
-docker compose restart db
-```
-
----
-
-# 15. Resetar completamente o banco
-
-⚠️ **ATENÇÃO: isso apaga os dados cadastrados no PostgreSQL.**
+Para parar e apagar o volume do banco:
 
 ```bash
 docker compose down -v
 ```
 
-Depois recrie tudo:
+> ⚠️ `docker compose down -v` apaga os dados armazenados no PostgreSQL.
+
+---
+
+## 10. Atualizar o projeto
+
+Quando houver novas alterações no GitHub:
 
 ```bash
+git pull
 docker compose up --build
 ```
 
-Use essa opção somente quando realmente quiser começar com o banco vazio.
+---
+
+## 11. Verificar containers e logs
+
+Ver containers:
+
+```bash
+docker compose ps
+```
+
+Ver logs gerais:
+
+```bash
+docker compose logs -f
+```
+
+Ver logs por serviço:
+
+```bash
+docker compose logs -f backend
+docker compose logs -f frontend
+docker compose logs -f db
+```
+
+Reiniciar um serviço:
+
+```bash
+docker compose restart backend
+docker compose restart frontend
+docker compose restart db
+```
 
 ---
 
-# 🐍 Backend
+## 🐍 Backend
 
-O backend foi desenvolvido em:
+Tecnologias:
 
-* Python 3.12+
-* FastAPI
-* SQLAlchemy 2
-* Pydantic 2
-* Alembic
-* PostgreSQL
-* JWT
-* Argon2
+- Python 3.12+
+- FastAPI
+- SQLAlchemy 2
+- Pydantic 2
+- Alembic
+- PostgreSQL
+- PyJWT
+- Argon2 / pwdlib
+- Pytest
 
 Principais recursos:
 
-* autenticação;
-* clientes;
-* serviços;
-* profissionais;
-* horários;
-* bloqueios;
-* agendamentos;
-* dashboard;
-* relatórios;
-* controle de conflitos.
+- Autenticação.
+- Clientes.
+- Serviços.
+- Profissionais.
+- Horários.
+- Bloqueios.
+- Agendamentos.
+- Dashboard.
+- Relatórios.
+- Controle de conflitos.
 
 ---
 
-# ⚛️ Frontend
+## ⚛️ Frontend
 
-O frontend utiliza:
+Tecnologias:
 
-* React
-* TypeScript
-* Vite
-* Tailwind CSS
-* TanStack Query
-* Lucide Icons
-* Sonner
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- TanStack Query
+- Lucide Icons
+- Sonner
+- Nginx para servir o build em Docker
 
-Interface responsiva para:
+A aplicação fica disponível em:
 
-* computador;
-* tablet;
-* celular.
+```text
+http://localhost:3000
+```
+
+Internamente, o Nginx escuta na porta `8080` dentro do container.
 
 ---
 
-# 🗄️ Banco de dados
+## 🗄️ Banco de dados
 
-O PostgreSQL é executado em container Docker.
+O PostgreSQL roda em container Docker.
 
-Banco:
+As credenciais devem ser configuradas no `.env`:
 
-```text
-agendapro
-```
-
-Usuário:
-
-```text
-agendapro
-```
-
-Senha local:
-
-```text
-agendapro
+```env
+POSTGRES_DB=agendapro
+POSTGRES_USER=agendapro
+POSTGRES_PASSWORD=sua-senha-local
+DATABASE_URL=postgresql+psycopg://agendapro:sua-senha-local@db:5432/agendapro
 ```
 
 Os dados são armazenados no volume:
@@ -432,14 +388,18 @@ Os dados são armazenados no volume:
 postgres_data
 ```
 
-Isso permite que os dados permaneçam mesmo depois de parar os containers.
+Esse volume mantém os dados mesmo após parar os containers com `docker compose down`.
 
 ---
 
-# 📁 Estrutura do projeto
+## 📁 Estrutura do projeto
 
 ```text
 Sistema-agendamento/
+│
+├── .github/
+│   └── workflows/
+│       └── runtime-verification.yml
 │
 ├── backend/
 │   ├── app/
@@ -471,44 +431,24 @@ Sistema-agendamento/
 
 ---
 
-# 🔐 Segurança
+## 🧪 Testes
 
-O projeto utiliza:
-
-* JWT;
-* hash de senha com Argon2;
-* validação de dados;
-* CORS;
-* rotas protegidas;
-* variáveis de ambiente.
-
-Nunca publique:
-
-```text
-.env
-```
-
-no GitHub.
-
-Para produção, utilize:
-
-* HTTPS;
-* `SECRET_KEY` forte e exclusiva;
-* PostgreSQL gerenciado;
-* CORS limitado ao domínio da aplicação.
-
----
-
-# 🧪 Testes
-
-Para executar os testes do backend manualmente:
+### Testes do backend
 
 ```bash
 cd backend
+PYTHONPATH=. pytest -q
+```
+
+No PowerShell:
+
+```powershell
+cd backend
+$env:PYTHONPATH="."
 pytest -q
 ```
 
-Para testar o build do frontend:
+### Testar build do frontend
 
 ```bash
 cd frontend
@@ -516,9 +456,38 @@ npm install
 npm run build
 ```
 
+### Verificação automatizada no GitHub Actions
+
+O repositório possui a workflow:
+
+```text
+.github/workflows/runtime-verification.yml
+```
+
+Ela executa:
+
+- Instalação das dependências do backend.
+- Testes com `pytest`.
+- Build e subida da aplicação com Docker Compose.
+- Verificação do `/api/health`.
+- Verificação do frontend em `localhost:3000`.
+- Smoke tests reais de autenticação via HTTP.
+
+Smoke tests cobertos:
+
+- Cadastro de usuário.
+- Consulta de `/api/auth/me` com token válido.
+- Acesso ao dashboard autenticado.
+- Bloqueio de dashboard sem token.
+- Rejeição de token inválido.
+- Rejeição de senha longa no login.
+- Rate limiting após tentativas inválidas.
+- Logout.
+- Rejeição de token revogado após logout.
+
 ---
 
-# 🔌 Principais endpoints
+## 🔌 Principais endpoints
 
 ### Autenticação
 
@@ -559,6 +528,22 @@ PUT    /api/professionals/{id}
 DELETE /api/professionals/{id}
 ```
 
+### Horários de funcionamento
+
+```text
+GET /api/business-hours
+PUT /api/business-hours
+```
+
+### Bloqueios
+
+```text
+GET    /api/blocked-times
+POST   /api/blocked-times
+PUT    /api/blocked-times/{id}
+DELETE /api/blocked-times/{id}
+```
+
 ### Agendamentos
 
 ```text
@@ -587,43 +572,40 @@ GET /api/reports/cancellations
 
 ---
 
-# 🆘 Solução de problemas
+## 🆘 Solução de problemas
 
-## Erro: `no configuration file provided`
+### Erro: `POSTGRES_PASSWORD obrigatória`, `DATABASE_URL obrigatória` ou `SECRET_KEY obrigatória`
 
-Você provavelmente está na pasta errada.
+Crie e configure o arquivo `.env` na raiz do projeto:
 
-Entre na pasta do projeto:
+```bash
+cp .env.example .env
+```
+
+Depois preencha as variáveis obrigatórias.
+
+---
+
+### Erro: `no configuration file provided`
+
+Você provavelmente está fora da pasta raiz do projeto.
 
 ```bash
 cd Sistema-agendamento
-```
-
-Depois:
-
-```bash
 docker compose up --build
 ```
 
 ---
 
-## Erro: `dockerDesktopLinuxEngine`
+### Erro relacionado ao Docker Desktop
 
-O Docker Desktop não está executando.
-
-Abra o:
-
-```text
-Docker Desktop
-```
-
-aguarde o Docker ficar pronto e execute:
+Confirme se o Docker Desktop está aberto e pronto:
 
 ```bash
 docker info
 ```
 
-Depois:
+Depois execute novamente:
 
 ```bash
 docker compose up --build
@@ -631,27 +613,38 @@ docker compose up --build
 
 ---
 
-## Erro de porta ocupada
+### Erro de porta ocupada
 
 O projeto utiliza:
 
 ```text
-Frontend → 3000
-Backend  → 8000
-PostgreSQL → 5432
+Frontend externo → 3000
+Backend externo  → 8000
+PostgreSQL interno → 5432
 ```
 
-Verifique se outra aplicação está utilizando essas portas.
+Se alguma porta estiver ocupada, pare o outro serviço ou ajuste o mapeamento no `docker-compose.yml`.
 
 ---
 
-# 🚀 Fluxo rápido para uma nova máquina
+### Alterei o `.env` e nada mudou
 
-Depois de instalar Docker Desktop e Git:
+Recrie os containers:
+
+```bash
+docker compose down
+docker compose up --build
+```
+
+---
+
+## 🚀 Fluxo rápido para nova máquina
 
 ```bash
 git clone https://github.com/Edudsprado/Sistema-agendamento.git
 cd Sistema-agendamento
+cp .env.example .env
+# edite o .env antes de continuar
 docker compose up --build
 ```
 
@@ -661,37 +654,36 @@ Depois abra:
 http://localhost:3000
 ```
 
-É isso.
-
 ---
 
-# 👨‍💻 Desenvolvimento
+## 👨‍💻 Desenvolvimento
 
-Para alterações no projeto:
+Fluxo comum:
 
 ```bash
 git pull
-```
-
-Edite os arquivos.
-
-Depois:
-
-```bash
+# edite os arquivos
 git add .
 git commit -m "descricao da alteracao"
 git push
 ```
 
-Em seguida, para atualizar o ambiente Docker:
+Atualizar o ambiente Docker:
 
 ```bash
 docker compose up --build
 ```
 
+Executar testes antes de enviar alterações:
+
+```bash
+cd backend
+PYTHONPATH=. pytest -q
+```
+
 ---
 
-# 📌 Projeto
+## 📌 Projeto
 
 **AgendaPro**
 
@@ -708,4 +700,6 @@ Docker
 
 Repositório:
 
+```text
 https://github.com/Edudsprado/Sistema-agendamento
+```
